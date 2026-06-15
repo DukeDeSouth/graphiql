@@ -4,6 +4,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { useGraphiQL, useGraphiQLActions } from './provider';
 import { ImagePreview } from './image-preview';
 import { ResponseHeader } from './response-header';
+import { ResponseTableView } from './response-table-view';
 import { ResponseTreeView } from './response-tree-view';
 import {
   getOrCreateModel,
@@ -181,7 +182,12 @@ export const ResponseEditor: FC<ResponseEditorProps> = ({
       {showHeader && (
         <ResponseHeader
           status={lastResponse?.status}
-          timeMs={lastResponse?.timing.totalMs}
+          statusText={lastResponse?.statusText}
+          timeMs={
+            lastResponse?.timing.totalMs !== undefined
+              ? Math.round(lastResponse.timing.totalMs)
+              : undefined
+          }
           sizeBytes={lastResponse?.size.response}
           upgradeNotice={
             showUpgradeBanner
@@ -215,9 +221,7 @@ export const ResponseEditor: FC<ResponseEditorProps> = ({
           </div>
         ))}
       {responseView === 'table' && (
-        <div className="graphiql-response-empty-state" role="status">
-          <span>Table view is not yet available.</span>
-        </div>
+        <ResponseTableView data={lastResponse?.body} />
       )}
     </div>
   );
