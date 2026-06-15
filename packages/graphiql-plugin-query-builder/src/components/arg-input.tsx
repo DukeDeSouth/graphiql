@@ -9,7 +9,7 @@ import {
   type GraphQLInputField,
   type GraphQLType,
 } from 'graphql';
-import { type FC, useState } from 'react';
+import { type FC, useEffect, useRef, useState } from 'react';
 import type { ArgValue } from '../lib/document-mutator';
 
 type ArgInputProps = {
@@ -129,7 +129,6 @@ const ArgInputByType: FC<TypedInputProps> = ({
   }
 
   // For scalar and enum types, optionally render the variable toggle.
-  const scalarValue = typeof value === 'string' ? value : '';
   const toggleBtn = onPromote ? (
     <button
       type="button"
@@ -158,19 +157,12 @@ const ArgInputByType: FC<TypedInputProps> = ({
             ${variableName ?? name}
           </span>
         ) : (
-          <select
-            aria-label={name}
-            value={scalarValue}
-            onChange={e => onChange(e.target.value)}
-            className="graphiql-qb-arg-select"
-          >
-            <option value="">—</option>
-            {named.getValues().map(v => (
-              <option key={v.name} value={v.name}>
-                {v.name}
-              </option>
-            ))}
-          </select>
+          <EnumArgControl
+            name={name}
+            value={typeof value === 'string' ? value : ''}
+            onChange={onChange}
+            enumValues={named.getValues().map(v => v.name)}
+          />
         )}
         {toggleBtn}
       </span>
@@ -189,12 +181,10 @@ const ArgInputByType: FC<TypedInputProps> = ({
               ${variableName ?? name}
             </span>
           ) : (
-            <input
-              type="checkbox"
-              aria-label={name}
-              checked={scalarValue === 'true'}
-              onChange={e => onChange(e.target.checked ? 'true' : 'false')}
-              className="graphiql-qb-arg-checkbox"
+            <BooleanArgControl
+              name={name}
+              value={typeof value === 'string' ? value : ''}
+              onChange={onChange}
             />
           )}
           {toggleBtn}
@@ -213,12 +203,11 @@ const ArgInputByType: FC<TypedInputProps> = ({
             ${variableName ?? name}
           </span>
         ) : (
-          <input
-            type={inputType}
-            aria-label={name}
-            value={scalarValue}
-            onChange={e => onChange(e.target.value)}
-            className="graphiql-qb-arg-input"
+          <ScalarArgControl
+            name={name}
+            inputType={inputType}
+            value={typeof value === 'string' ? value : ''}
+            onChange={onChange}
           />
         )}
         {toggleBtn}
@@ -230,8 +219,143 @@ const ArgInputByType: FC<TypedInputProps> = ({
 };
 
 // ---------------------------------------------------------------------------
-// List arg: real ArgValue[] — no JSON round-trips
+// ScalarArgControl — local state + reconciliation for text/number inputs
 // ---------------------------------------------------------------------------
+//
+// Reconciliation rule:
+//   - Keep a local `localValue` state seeded from `value` prop.
+//   - Track the last value emitted via `lastEmitted` ref.
+//   - On render: if `value` differs from both `localValue` AND `lastEmitted`,
+//     treat it as an external change and sync local state to `value`.
+//     If `value` equals `lastEmitted` it's just our own change echoing back —
+//     don't clobber local (that would drop in-progress typing).
+//   - On user input: update local state immediately, set `lastEmitted`, call
+//     `onChange(newValue)`.
+//
+// This lets characters accumulate locally across keystrokes while the document
+// round-trip (parse→print→editor→re-parse) catches up asynchronously.
+
+type ScalarArgControlProps = {
+  name: string;
+  inputType: 'text' | 'number';
+  value: string;
+  onChange: (v: ArgValue) => void;
+};
+
+const ScalarArgControl: FC<ScalarArgControlProps> = ({
+  name,
+  inputType,
+  value,
+  onChange,
+}) => {
+  const [localValue, setLocalValue] = useState(value);
+  // Track the last value this component emitted so we can distinguish our own
+  // changes echoing back from genuine external document changes.
+  const lastEmitted = useRef(value);
+
+  // Reconcile: if the incoming prop differs from what we last emitted, it's an
+  // external change (e.g. the user edited the editor directly) — sync local state.
+  // If it matches what we emitted, it's just our own write echoing back — leave
+  // local state alone so in-progress typing accumulates correctly.
+  useEffect(() => {
+    if (value !== lastEmitted.current) {
+      setLocalValue(value);
+      lastEmitted.current = value;
+    }
+  }, [value]);
+
+  const handleChange = (newValue: string) => {
+    setLocalValue(newValue);
+    lastEmitted.current = newValue;
+    onChange(newValue);
+  };
+
+  return (
+    <input
+      type={inputType}
+      aria-label={name}
+      value={localValue}
+      onChange={e => handleChange(e.target.value)}
+      className="graphiql-qb-arg-input"
+    />
+  );
+};
+
+// ---------------------------------------------------------------------------
+// BooleanArgControl — checkbox (no multi-char issue, but keep pattern uniform)
+// ---------------------------------------------------------------------------
+
+type BooleanArgControlProps = {
+  name: string;
+  value: string;
+  onChange: (v: ArgValue) => void;
+};
+
+const BooleanArgControl: FC<BooleanArgControlProps> = ({
+  name,
+  value,
+  onChange,
+}) => {
+  return (
+    <input
+      type="checkbox"
+      aria-label={name}
+      checked={value === 'true'}
+      onChange={e => onChange(e.target.checked ? 'true' : 'false')}
+      className="graphiql-qb-arg-checkbox"
+    />
+  );
+};
+
+// ---------------------------------------------------------------------------
+// EnumArgControl — select (no multi-char issue, but extracted for symmetry)
+// ---------------------------------------------------------------------------
+
+type EnumArgControlProps = {
+  name: string;
+  value: string;
+  onChange: (v: ArgValue) => void;
+  enumValues: string[];
+};
+
+const EnumArgControl: FC<EnumArgControlProps> = ({
+  name,
+  value,
+  onChange,
+  enumValues,
+}) => {
+  return (
+    <select
+      aria-label={name}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      className="graphiql-qb-arg-select"
+    >
+      <option value="">—</option>
+      {enumValues.map(v => (
+        <option key={v} value={v}>
+          {v}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// List arg: local items array with reconciliation so empty items persist
+// ---------------------------------------------------------------------------
+//
+// The same reconciliation pattern as ScalarArgControl, but for arrays:
+//   - Keep `localItems` local state seeded from `value` prop.
+//   - Track the last array emitted via `lastEmitted` ref.
+//   - On render: if prop `value` differs from both `localItems` AND
+//     `lastEmitted` (by reference-equality of their serialized form), treat
+//     it as an external change and sync.
+//   - On Add/Remove/Update: update local state immediately, set `lastEmitted`,
+//     call `onChange(newArray)`.
+//
+// This ensures an added empty item stays visible even though the document
+// round-trip omits empty leaves (because `argValueToValueNode` skips them).
 
 type ListArgInputProps = {
   itemType: GraphQLType;
@@ -240,29 +364,56 @@ type ListArgInputProps = {
   onChange: (v: ArgValue) => void;
 };
 
+// Stable identity key for reconciliation comparison (JSON is fine for ArgValue).
+function serializeItems(items: ArgValue[]): string {
+  return JSON.stringify(items);
+}
+
 const ListArgInput: FC<ListArgInputProps> = ({
   itemType,
   name,
   value,
   onChange,
 }) => {
-  const updateAt = (index: number, newVal: ArgValue) => {
-    const next = [...value];
-    next[index] = newVal;
+  const [localItems, setLocalItems] = useState<ArgValue[]>(value);
+  // Track the last serialized value emitted so we can distinguish our own
+  // changes echoing back from genuine external document changes.
+  const lastEmitted = useRef<string>(serializeItems(value));
+
+  // Reconcile: if the incoming prop differs from what we last emitted, treat it
+  // as an external change and sync. If it matches what we emitted, it's just
+  // our write echoing back — leave local state alone so added empty items persist.
+  useEffect(() => {
+    const serializedProp = serializeItems(value);
+    if (serializedProp !== lastEmitted.current) {
+      setLocalItems(value);
+      lastEmitted.current = serializedProp;
+    }
+  }, [value]);
+
+  const emit = (next: ArgValue[]) => {
+    setLocalItems(next);
+    lastEmitted.current = serializeItems(next);
     onChange(next);
   };
 
+  const updateAt = (index: number, newVal: ArgValue) => {
+    const next = [...localItems];
+    next[index] = newVal;
+    emit(next);
+  };
+
   const removeAt = (index: number) => {
-    onChange(value.filter((_, i) => i !== index));
+    emit(localItems.filter((_, i) => i !== index));
   };
 
   const addItem = () => {
-    onChange([...value, defaultValueForType(itemType)]);
+    emit([...localItems, defaultValueForType(itemType)]);
   };
 
   return (
     <div className="graphiql-qb-list-arg">
-      {value.map((item, i) => (
+      {localItems.map((item, i) => (
         <div key={i} className="graphiql-qb-list-item">
           <ArgInputByType
             type={itemType}
