@@ -1,4 +1,5 @@
 import {
+  GraphQLList,
   getNamedType,
   isEnumType,
   isInputObjectType,
@@ -10,7 +11,11 @@ import {
   type GraphQLType,
 } from 'graphql';
 import { type FC, useEffect, useRef, useState } from 'react';
-import type { ArgValue } from '../lib/document-mutator';
+import {
+  argValueToValueNode,
+  valueNodeToArgValue,
+  type ArgValue,
+} from '../lib/document-mutator';
 
 type ArgInputProps = {
   arg: GraphQLArgument | GraphQLInputField;
@@ -393,7 +398,17 @@ const ListArgInput: FC<ListArgInputProps> = ({
 
   const emit = (next: ArgValue[]) => {
     setLocalItems(next);
-    lastEmitted.current = serializeItems(next);
+    // Store the NORMALIZED form (what the document will echo back) so that the
+    // echo re-render doesn't look like an external change. Empty scalar leaves
+    // are dropped by argValueToValueNode, so [''] normalizes to [] for a list
+    // of Int/String/etc. Without this, the echo would clobber local state and
+    // remove a just-added empty item before the user can type into it.
+    const listType = new GraphQLList(itemType);
+    const roundTripped = argValueToValueNode(listType, next);
+    const normalizedItems = roundTripped
+      ? (valueNodeToArgValue(roundTripped) as ArgValue[])
+      : [];
+    lastEmitted.current = serializeItems(normalizedItems);
     onChange(next);
   };
 
