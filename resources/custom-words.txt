@@ -190,6 +190,7 @@ quasis
 ractive
 randomthing
 ravikoti
+reparse
 reparsed
 resi
 resizer
@@ -219,6 +220,7 @@ socker
 sonarjs
 sorare
 spawndamnit
+spinbuttons
 squirrelly
 starships
 stonexer

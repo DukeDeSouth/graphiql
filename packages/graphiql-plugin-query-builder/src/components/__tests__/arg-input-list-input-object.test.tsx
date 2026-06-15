@@ -137,8 +137,11 @@ describe('ArgInput — input object', () => {
     const arg = makeArg('input', TagInput);
     render(<ArgInput arg={arg} value={{}} onChange={() => {}} />);
     await userEvent.click(screen.getByText('input'));
-    // TagInput has fields: name, value
-    expect(screen.getByRole('textbox', { name: 'name' })).toBeInTheDocument();
+    // TagInput has fields: name, value. Use findBy so the assertion retries
+    // until the lazily-rendered nested inputs have committed.
+    expect(
+      await screen.findByRole('textbox', { name: 'name' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'value' })).toBeInTheDocument();
   });
 

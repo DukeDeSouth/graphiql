@@ -88,13 +88,14 @@ describe('Query Builder – scalar argument', () => {
     // The "string" arg input should now appear (field is selected, has args)
     cy.get('[aria-label="string"]').should('be.visible').type('hello');
 
-    // Editor should reflect the arg value
+    // Editor should reflect the arg value. Whitespace is stripped because
+    // Monaco's rendered innerText does not always use plain spaces between tokens.
     cy.get(
       '.graphiql-query-editor .view-lines.monaco-mouse-cursor-text',
     ).should(element => {
-      const text = element.get(0).innerText;
+      const text = element.get(0).innerText.replaceAll(/\s+/g, '');
       expect(text).to.include('hasArgs');
-      expect(text).to.include('string: "hello"');
+      expect(text).to.include('string:"hello"');
     });
   });
 });
@@ -111,24 +112,29 @@ describe('Query Builder – list argument (Int[])', () => {
     // Select "hasArgs" to expose its args
     cy.get('[aria-label="Toggle hasArgs"]').click();
 
-    // The "listInt" arg renders a ListArgInput – click "Add item"
-    cy.get('[aria-label="Add item"]').first().click();
+    // hasArgs has several list args (listString, listInt, ...). Scope to the
+    // listInt row specifically — its "Add item" button and number input.
+    cy.contains('.graphiql-qb-arg-row', 'listInt')
+      .find('[aria-label="Add item"]')
+      .click();
 
-    // An integer input should appear for the new list item
-    cy.get('.graphiql-qb-list-arg input[type="number"]')
+    // An integer input should appear for the new list item (and persist)
+    cy.contains('.graphiql-qb-arg-row', 'listInt')
+      .find('input[type="number"]')
       .first()
       .clear()
       .type('42');
 
-    // The query editor must contain the list arg with an unquoted integer value
+    // The query editor must contain the list arg with an unquoted integer value.
+    // Whitespace is stripped for the same Monaco innerText reason as above.
     cy.get(
       '.graphiql-query-editor .view-lines.monaco-mouse-cursor-text',
     ).should(element => {
-      const text = element.get(0).innerText;
+      const text = element.get(0).innerText.replaceAll(/\s+/g, '');
       expect(text).to.include('hasArgs');
       // Must be [42], not ["42"]
-      expect(text).to.include('listInt: [42]');
-      expect(text).to.not.include('listInt: ["42"]');
+      expect(text).to.include('listInt:[42]');
+      expect(text).to.not.include('listInt:["42"]');
     });
   });
 });
