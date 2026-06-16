@@ -1,3 +1,4 @@
+import { ChevronDownIcon } from '@graphiql/react';
 import {
   getNamedType,
   isInterfaceType,
@@ -310,7 +311,15 @@ const TypeConditionEntry: FC<TypeConditionEntryProps> = ({
           aria-expanded={expanded}
           aria-label={`${expanded ? 'Collapse' : 'Expand'} ... on ${typeName}`}
         >
-          {expanded ? '▾' : '▸'}
+          <span
+            className={
+              expanded
+                ? 'graphiql-qb-chevron-expanded'
+                : 'graphiql-qb-chevron-collapsed'
+            }
+          >
+            <ChevronDownIcon />
+          </span>
         </button>
         <span className="graphiql-qb-inline-fragment-label">
           <span className="graphiql-qb-spread">...</span>

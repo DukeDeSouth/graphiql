@@ -1,3 +1,4 @@
+import { ChevronDownIcon } from '@graphiql/react';
 import type { GraphQLField } from 'graphql';
 import type { FC } from 'react';
 import type { ArgValue } from '../lib/document-mutator';
@@ -50,6 +51,7 @@ export const FieldRow: FC<FieldRowProps> = ({
       className="graphiql-qb-field-row"
       style={{ paddingLeft: indent }}
       data-testid="field-row"
+      data-selected={selected ? 'true' : 'false'}
     >
       <div className="graphiql-qb-field-header">
         <input
@@ -67,7 +69,15 @@ export const FieldRow: FC<FieldRowProps> = ({
             aria-expanded={expanded}
             aria-label={`${expanded ? 'Collapse' : 'Expand'} ${field.name}`}
           >
-            {expanded ? '▾' : '▸'}
+            <span
+              className={
+                expanded
+                  ? 'graphiql-qb-chevron-expanded'
+                  : 'graphiql-qb-chevron-collapsed'
+              }
+            >
+              <ChevronDownIcon />
+            </span>
           </button>
         ) : (
           <span className="graphiql-qb-expand-placeholder" aria-hidden="true" />

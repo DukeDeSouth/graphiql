@@ -32,3 +32,20 @@ export const useGraphiQLActions = () => ({
 
 export const GraphiQLProvider = ({ children }: { children: ReactNode }) =>
   children;
+
+export const PanelHeader = ({
+  title: _title,
+  subtitle: _subtitle,
+  actions: _actions,
+}: {
+  title: ReactNode;
+  subtitle?: ReactNode;
+  actions?: ReactNode;
+}) => null;
+
+export const MethodPill = ({ operation: _operation }: { operation: string }) =>
+  null;
+
+export const MagnifyingGlassIcon = () => null;
+export const ChevronDownIcon = () => null;
+export const ChevronUpIcon = () => null;

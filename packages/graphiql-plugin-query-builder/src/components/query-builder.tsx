@@ -1,5 +1,17 @@
-import { useGraphiQL, useGraphiQLActions } from '@graphiql/react';
-import { type FieldNode, getNamedType, parse, print } from 'graphql';
+import {
+  MagnifyingGlassIcon,
+  MethodPill,
+  PanelHeader,
+  useGraphiQL,
+  useGraphiQLActions,
+} from '@graphiql/react';
+import {
+  type FieldNode,
+  type SelectionNode,
+  getNamedType,
+  parse,
+  print,
+} from 'graphql';
 import { type FC, useMemo } from 'react';
 import {
   addInlineFragment,
@@ -78,6 +90,28 @@ function extractRawArgValue(
     ss = f.selectionSet ?? ss;
   }
   return '';
+}
+
+function countSelectedFields(doc: ReturnType<typeof parse>): number {
+  let count = 0;
+  function walk(selections: readonly SelectionNode[]) {
+    for (const sel of selections) {
+      if (sel.kind === 'Field') {
+        count++;
+        if (sel.selectionSet) {
+          walk(sel.selectionSet.selections);
+        }
+      } else if (sel.kind === 'InlineFragment' && sel.selectionSet) {
+        walk(sel.selectionSet.selections);
+      }
+    }
+  }
+  for (const def of doc.definitions) {
+    if (def.kind === 'OperationDefinition' && def.selectionSet) {
+      walk(def.selectionSet.selections);
+    }
+  }
+  return count;
 }
 
 export const QueryBuilder: FC = () => {
@@ -190,9 +224,18 @@ export const QueryBuilder: FC = () => {
     applyDoc(removeInlineFragment(doc, path, typeName));
   }
 
+  const header = (
+    <PanelHeader
+      title="Query builder"
+      subtitle="Tick fields to add them. Edits flow both ways with the editor."
+      actions={<MagnifyingGlassIcon />}
+    />
+  );
+
   if (!schema) {
     return (
       <div className="graphiql-query-builder">
+        {header}
         <p className="graphiql-qb-empty">No schema loaded.</p>
       </div>
     );
@@ -204,26 +247,45 @@ export const QueryBuilder: FC = () => {
     schema.getSubscriptionType(),
   ].filter(Boolean) as NonNullable<ReturnType<typeof schema.getQueryType>>[];
 
+  const selectedCount = countSelectedFields(doc);
+
   return (
     <div className="graphiql-query-builder">
-      {rootTypes.map(rootType => (
-        <section key={rootType.name} className="graphiql-qb-root-section">
-          <h3 className="graphiql-qb-root-name">{rootType.name}</h3>
-          <FieldTree
-            type={rootType}
-            path={[]}
-            doc={doc}
-            schema={schema ?? undefined}
-            onToggle={handleToggle}
-            onSetArg={handleSetArg}
-            onPromoteArg={handlePromoteArg}
-            onDemoteArg={handleDemoteArg}
-            onAddInlineFragment={handleAddInlineFragment}
-            onRemoveInlineFragment={handleRemoveInlineFragment}
-          />
-        </section>
-      ))}
-      <FragmentSection doc={doc} />
+      {header}
+      <div className="graphiql-qb-body">
+        {rootTypes.map(rootType => {
+          const opKind =
+            rootType.name === 'Query'
+              ? 'query'
+              : rootType.name === 'Mutation'
+                ? 'mutation'
+                : 'subscription';
+          return (
+            <section key={rootType.name} className="graphiql-qb-root-section">
+              <div className="graphiql-qb-op-header">
+                <MethodPill operation={opKind} />
+                <span className="graphiql-qb-op-name">{rootType.name}</span>
+                <span className="graphiql-qb-op-count">
+                  {selectedCount} selected
+                </span>
+              </div>
+              <FieldTree
+                type={rootType}
+                path={[]}
+                doc={doc}
+                schema={schema ?? undefined}
+                onToggle={handleToggle}
+                onSetArg={handleSetArg}
+                onPromoteArg={handlePromoteArg}
+                onDemoteArg={handleDemoteArg}
+                onAddInlineFragment={handleAddInlineFragment}
+                onRemoveInlineFragment={handleRemoveInlineFragment}
+              />
+            </section>
+          );
+        })}
+        <FragmentSection doc={doc} />
+      </div>
     </div>
   );
 };

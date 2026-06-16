@@ -1,26 +1,80 @@
+/* Query Builder — v6 visual language */
+
+/* =========================================================================
+   Panel wrapper
+   ========================================================================= */
+
 .graphiql-query-builder {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: auto;
-  padding: var(--px-16);
+  overflow: hidden;
+  background: oklch(var(--bg-canvas));
 }
+
+/* =========================================================================
+   Scrollable body (everything below the PanelHeader)
+   ========================================================================= */
+
+.graphiql-qb-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--px-8) 0;
+}
+
+/* =========================================================================
+   Empty state
+   ========================================================================= */
 
 .graphiql-qb-empty {
-  color: var(--color-neutral);
+  padding: var(--px-16);
+  color: oklch(var(--fg-subtle));
   font-size: var(--font-size-body);
+  font-family: var(--font-family);
 }
+
+/* =========================================================================
+   Root section (one per operation type: Query / Mutation / Subscription)
+   ========================================================================= */
 
 .graphiql-qb-root-section {
-  margin-bottom: var(--px-16);
+  margin-bottom: var(--px-8);
 }
 
-.graphiql-qb-root-name {
-  font-size: var(--font-size-h4);
-  font-weight: 600;
-  margin-bottom: var(--px-8);
-  color: var(--color-primary);
+/* =========================================================================
+   Operation header row
+   ========================================================================= */
+
+.graphiql-qb-op-header {
+  display: flex;
+  align-items: center;
+  gap: var(--px-8);
+  padding: var(--px-6) var(--px-14);
+  border-bottom: 1px solid oklch(var(--border-default));
+  background: oklch(var(--bg-elevated));
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
+
+.graphiql-qb-op-name {
+  flex: 1;
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: oklch(var(--fg-strong));
+}
+
+.graphiql-qb-op-count {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-eyebrow);
+  color: oklch(var(--fg-subtle));
+  white-space: nowrap;
+}
+
+/* =========================================================================
+   Field tree
+   ========================================================================= */
 
 .graphiql-qb-field-tree {
   display: flex;
@@ -32,40 +86,112 @@
   flex-direction: column;
 }
 
+/* =========================================================================
+   Field row
+   ========================================================================= */
+
 .graphiql-qb-field-row {
   display: flex;
-  align-items: center;
-  gap: var(--px-4);
-  padding-top: 2px;
-  padding-bottom: 2px;
-  border-radius: var(--border-radius-4);
-  cursor: default;
+  flex-direction: column;
+  padding: 1px 0;
 }
 
-.graphiql-qb-field-row:hover {
-  background-color: var(--color-base);
+.graphiql-qb-field-header {
+  display: flex;
+  align-items: center;
+  gap: var(--px-6);
+  padding: 3px var(--px-14) 3px var(--px-8);
+  border-radius: var(--radius-sm);
+  min-height: 26px;
+  cursor: default;
+  transition: background 80ms;
 }
+
+.graphiql-qb-field-header:hover {
+  background: oklch(var(--fg-default) / 0.05);
+}
+
+/* Dim unselected rows */
+.graphiql-qb-field-row[data-selected='false'] .graphiql-qb-field-name {
+  color: oklch(var(--fg-disabled));
+}
+
+.graphiql-qb-field-row[data-selected='false'] .graphiql-qb-expand-btn {
+  color: oklch(var(--fg-dim));
+}
+
+/* =========================================================================
+   Custom checkbox (appearance: none — keeps real <input type=checkbox>)
+   ========================================================================= */
 
 .graphiql-qb-field-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
   flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid oklch(var(--fg-dim));
+  background: transparent;
   cursor: pointer;
-  accent-color: var(--color-primary);
+  position: relative;
+  transition:
+    background 100ms,
+    border-color 100ms;
 }
+
+.graphiql-qb-field-checkbox:checked {
+  background: oklch(var(--accent-purple));
+  border-color: oklch(var(--accent-purple));
+}
+
+/* Checkmark via pseudo-element */
+.graphiql-qb-field-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5.5l2 2 4-4' stroke='%23fff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E")
+    center / 9px no-repeat;
+}
+
+.graphiql-qb-field-checkbox:focus-visible {
+  outline: 2px solid oklch(var(--accent-purple));
+  outline-offset: 1px;
+}
+
+/* =========================================================================
+   Expand / collapse button
+   ========================================================================= */
 
 .graphiql-qb-expand-btn {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0 2px;
-  font-size: 10px;
-  color: var(--color-neutral);
-  line-height: 1;
+  padding: 0;
+  color: oklch(var(--fg-muted));
+  border-radius: var(--radius-sm);
+  transition: color 80ms;
+}
+
+.graphiql-qb-expand-btn:hover {
+  color: oklch(var(--fg-default));
+  background: oklch(var(--fg-default) / 0.08);
 }
 
 .graphiql-qb-expand-btn:focus-visible {
-  outline: 2px solid var(--color-primary);
-  border-radius: 2px;
+  outline: 2px solid oklch(var(--accent-purple));
+  outline-offset: 1px;
+}
+
+.graphiql-qb-expand-btn svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
 }
 
 .graphiql-qb-expand-placeholder {
@@ -74,25 +200,242 @@
   flex-shrink: 0;
 }
 
+/* =========================================================================
+   Chevron rotation for expand/collapse
+   ========================================================================= */
+
+.graphiql-qb-chevron-collapsed {
+  display: inline-flex;
+  transform: rotate(-90deg);
+  transition: transform 120ms;
+}
+
+.graphiql-qb-chevron-expanded {
+  display: inline-flex;
+  transform: rotate(0deg);
+  transition: transform 120ms;
+}
+
+/* =========================================================================
+   Field name & type
+   ========================================================================= */
+
 .graphiql-qb-field-name {
+  flex: 1;
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-body);
-  color: var(--color-text);
+  font-size: var(--font-size-mono);
+  color: oklch(var(--fg-default));
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 80ms;
+}
+
+.graphiql-qb-field-row[data-selected='true'] .graphiql-qb-field-name {
+  color: oklch(var(--fg-strong));
 }
 
 .graphiql-qb-field-type {
+  flex-shrink: 0;
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-hint);
-  color: var(--color-neutral);
-  margin-left: 4px;
+  font-size: var(--font-size-eyebrow);
+  color: oklch(var(--accent-orange));
+  text-align: right;
+  white-space: nowrap;
 }
 
-/* Type-condition selector (union / interface fields) */
+/* =========================================================================
+   Args panel (shown when field selected and has args)
+   ========================================================================= */
+
+.graphiql-qb-field-args {
+  display: flex;
+  flex-direction: column;
+  gap: var(--px-4);
+  margin: var(--px-4) 0 var(--px-4) 38px;
+  padding: var(--px-6) var(--px-8);
+  background: oklch(var(--bg-subtle));
+  border-radius: var(--radius-md);
+  border: 1px solid oklch(var(--border-default));
+}
+
+.graphiql-qb-arg-row {
+  display: flex;
+  align-items: center;
+  gap: var(--px-6);
+  min-width: 0;
+}
+
+.graphiql-qb-arg-name {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-eyebrow);
+  color: oklch(var(--fg-muted));
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* =========================================================================
+   Arg input controls
+   ========================================================================= */
+
+.graphiql-qb-arg-input,
+.graphiql-qb-arg-select {
+  flex: 1;
+  min-width: 0;
+  background: oklch(var(--bg-overlay));
+  border: 1px solid oklch(var(--border-strong));
+  border-radius: var(--radius-sm);
+  color: oklch(var(--fg-default));
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-eyebrow);
+  padding: 2px var(--px-6);
+  outline: none;
+  transition: border-color 80ms;
+}
+
+.graphiql-qb-arg-input:focus,
+.graphiql-qb-arg-select:focus {
+  border-color: oklch(var(--accent-purple));
+}
+
+.graphiql-qb-arg-checkbox {
+  accent-color: oklch(var(--accent-purple));
+  cursor: pointer;
+}
+
+.graphiql-qb-arg-with-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--px-4);
+  flex: 1;
+  min-width: 0;
+}
+
+/* =========================================================================
+   Variable toggle & badge
+   ========================================================================= */
+
+.graphiql-qb-var-toggle {
+  flex-shrink: 0;
+  background: oklch(var(--accent-purple) / 0.12);
+  border: 1px solid oklch(var(--accent-purple) / 0.3);
+  border-radius: var(--radius-sm);
+  color: oklch(var(--accent-purple));
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-eyebrow);
+  padding: 1px var(--px-6);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 80ms;
+}
+
+.graphiql-qb-var-toggle:hover {
+  background: oklch(var(--accent-purple) / 0.2);
+}
+
+.graphiql-qb-var-toggle[aria-pressed='true'] {
+  background: oklch(var(--accent-purple));
+  color: oklch(98% 0 0);
+  border-color: transparent;
+}
+
+.graphiql-qb-var-badge {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-eyebrow);
+  color: oklch(var(--accent-purple));
+  background: oklch(var(--accent-purple) / 0.12);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--px-6);
+}
+
+/* =========================================================================
+   List arg
+   ========================================================================= */
+
+.graphiql-qb-list-arg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--px-4);
+  flex: 1;
+}
+
+.graphiql-qb-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--px-4);
+}
+
+.graphiql-qb-list-add {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed oklch(var(--border-strong));
+  border-radius: var(--radius-sm);
+  color: oklch(var(--fg-subtle));
+  cursor: pointer;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-eyebrow);
+  padding: 1px var(--px-6);
+  transition:
+    color 80ms,
+    border-color 80ms;
+}
+
+.graphiql-qb-list-add:hover {
+  color: oklch(var(--fg-default));
+  border-color: oklch(var(--fg-muted));
+}
+
+.graphiql-qb-list-remove {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: oklch(var(--fg-dim));
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 var(--px-4);
+  border-radius: var(--radius-sm);
+  transition: color 80ms;
+}
+
+.graphiql-qb-list-remove:hover {
+  color: oklch(var(--accent-red));
+}
+
+/* =========================================================================
+   Input object (details/summary)
+   ========================================================================= */
+
+.graphiql-qb-input-object {
+  flex: 1;
+}
+
+.graphiql-qb-input-object > summary {
+  cursor: pointer;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-eyebrow);
+  color: oklch(var(--fg-muted));
+  padding: 1px 0;
+  user-select: none;
+}
+
+.graphiql-qb-input-object > summary:hover {
+  color: oklch(var(--fg-default));
+}
+
+.graphiql-qb-input-field {
+  padding-left: var(--px-12);
+  margin-top: var(--px-4);
+}
+
+/* =========================================================================
+   Type condition selector (union / interface inline fragments)
+   ========================================================================= */
 
 .graphiql-qb-type-condition {
   display: flex;
   flex-direction: column;
-  padding-left: var(--px-16);
 }
 
 .graphiql-qb-inline-fragment {
@@ -103,28 +446,99 @@
 .graphiql-qb-inline-fragment-header {
   display: flex;
   align-items: center;
-  gap: var(--px-4);
-  padding-top: 2px;
-  padding-bottom: 2px;
-  border-radius: var(--border-radius-4);
+  gap: var(--px-6);
+  padding: 3px var(--px-14) 3px var(--px-8);
+  border-radius: var(--radius-sm);
+  min-height: 26px;
   cursor: default;
 }
 
 .graphiql-qb-inline-fragment-header:hover {
-  background-color: var(--color-base);
+  background: oklch(var(--fg-default) / 0.05);
 }
 
 .graphiql-qb-inline-fragment-label {
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-body);
-  color: var(--color-text);
+  font-size: var(--font-size-mono);
+  color: oklch(var(--fg-default));
 }
 
 .graphiql-qb-spread {
-  color: var(--color-neutral);
+  color: oklch(var(--fg-subtle));
 }
 
 .graphiql-qb-type-name {
-  color: var(--color-primary);
+  color: oklch(var(--accent-blue));
   font-weight: 600;
+}
+
+/* =========================================================================
+   Fragment section
+   ========================================================================= */
+
+.graphiql-qb-fragment-section {
+  margin-top: var(--px-16);
+  padding: 0 var(--px-14);
+  border-top: 1px solid oklch(var(--border-default));
+  padding-top: var(--px-12);
+}
+
+.graphiql-qb-fragment-heading {
+  margin: 0 0 var(--px-8);
+  font-family: var(--font-family);
+  font-size: var(--font-size-eyebrow);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(var(--fg-subtle));
+}
+
+.graphiql-qb-fragment-empty {
+  color: oklch(var(--fg-disabled));
+  font-size: var(--font-size-small);
+  font-family: var(--font-family);
+  margin: 0;
+}
+
+.graphiql-qb-fragment-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.graphiql-qb-fragment-item {
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.graphiql-qb-fragment-name {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-mono);
+  color: oklch(var(--accent-blue));
+}
+
+.graphiql-qb-create-fragment-btn {
+  margin-top: var(--px-8);
+  background: oklch(var(--bg-subtle));
+  border: 1px solid oklch(var(--border-strong));
+  border-radius: var(--radius-md);
+  color: oklch(var(--fg-muted));
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: var(--font-size-small);
+  padding: var(--px-6) var(--px-12);
+  width: 100%;
+  text-align: left;
+  transition:
+    background 80ms,
+    color 80ms;
+}
+
+.graphiql-qb-create-fragment-btn:hover {
+  background: oklch(var(--bg-overlay));
+  color: oklch(var(--fg-default));
 }
