@@ -8,6 +8,7 @@ import {
   isScalarType,
   type GraphQLArgument,
   type GraphQLInputField,
+  type GraphQLInputType,
   type GraphQLType,
 } from 'graphql';
 import { type FC, useEffect, useRef, useState } from 'react';
@@ -403,7 +404,7 @@ const ListArgInput: FC<ListArgInputProps> = ({
     // are dropped by argValueToValueNode, so [''] normalizes to [] for a list
     // of Int/String/etc. Without this, the echo would clobber local state and
     // remove a just-added empty item before the user can type into it.
-    const listType = new GraphQLList(itemType);
+    const listType = new GraphQLList(itemType as GraphQLInputType);
     const roundTripped = argValueToValueNode(listType, next);
     const normalizedItems = roundTripped
       ? (valueNodeToArgValue(roundTripped) as ArgValue[])

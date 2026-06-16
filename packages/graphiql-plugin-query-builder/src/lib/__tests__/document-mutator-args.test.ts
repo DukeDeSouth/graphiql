@@ -3,6 +3,7 @@ import {
   GraphQLFloat,
   GraphQLInt,
   GraphQLString,
+  Kind,
   parse,
   print,
 } from 'graphql';
@@ -54,7 +55,7 @@ describe('setFieldArgument', () => {
   it('adds an Int arg to a field that has no args', () => {
     const d = doc('{ hero }');
     const result = setFieldArgument(d, ['hero'], 'id', {
-      kind: 'IntValue',
+      kind: Kind.INT,
       value: '1',
     });
     const printed = print(result);
@@ -64,7 +65,7 @@ describe('setFieldArgument', () => {
   it('adds a String arg (printed with quotes)', () => {
     const d = doc('{ hero }');
     const result = setFieldArgument(d, ['hero'], 'name', {
-      kind: 'StringValue',
+      kind: Kind.STRING,
       value: 'Luke',
     });
     const printed = print(result);
@@ -74,7 +75,7 @@ describe('setFieldArgument', () => {
   it('adds an Enum arg (printed without quotes)', () => {
     const d = doc('{ hero }');
     const result = setFieldArgument(d, ['hero'], 'episode', {
-      kind: 'EnumValue',
+      kind: Kind.ENUM,
       value: 'JEDI',
     });
     const printed = print(result);
@@ -84,7 +85,7 @@ describe('setFieldArgument', () => {
   it('updates an existing arg', () => {
     const d = doc('{ hero(id: 1) }');
     const result = setFieldArgument(d, ['hero'], 'id', {
-      kind: 'IntValue',
+      kind: Kind.INT,
       value: '2',
     });
     const printed = print(result);
@@ -103,7 +104,7 @@ describe('setFieldArgument', () => {
   it('works on a nested field', () => {
     const d = doc('{ hero { friends } }');
     const result = setFieldArgument(d, ['hero', 'friends'], 'first', {
-      kind: 'IntValue',
+      kind: Kind.INT,
       value: '5',
     });
     const printed = print(result);
@@ -113,7 +114,7 @@ describe('setFieldArgument', () => {
   it('does nothing when the field path does not exist', () => {
     const d = doc('{ hero }');
     const result = setFieldArgument(d, ['droid'], 'id', {
-      kind: 'IntValue',
+      kind: Kind.INT,
       value: '1',
     });
     expect(print(result)).toBe(print(d));
@@ -122,7 +123,7 @@ describe('setFieldArgument', () => {
   it('preserves existing sibling args when adding a new one', () => {
     const d = doc('{ hero(id: 1) }');
     const result = setFieldArgument(d, ['hero'], 'episode', {
-      kind: 'EnumValue',
+      kind: Kind.ENUM,
       value: 'JEDI',
     });
     const printed = print(result);

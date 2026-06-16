@@ -64,7 +64,7 @@ describe('ArgInput — list of scalars', () => {
     await userEvent.type(screen.getByRole('textbox'), 'x');
     expect(onChange).toHaveBeenCalled();
     // Each onChange call should pass the whole list as an ArgValue array
-    const firstCall = onChange.mock.calls[0][0] as ArgValue;
+    const firstCall = onChange.mock.calls[0]![0] as ArgValue;
     expect(Array.isArray(firstCall)).toBe(true);
     expect((firstCall as ArgValue[])[0]).toBe('x');
   });
@@ -75,7 +75,7 @@ describe('ArgInput — list of scalars', () => {
     render(<ArgInput arg={arg} value={[]} onChange={onChange} />);
     await userEvent.click(screen.getByRole('button', { name: /add item/i }));
     expect(onChange).toHaveBeenCalled();
-    const result = onChange.mock.calls[0][0] as ArgValue[];
+    const result = onChange.mock.calls[0]![0] as ArgValue[];
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(1);
   });
@@ -89,7 +89,7 @@ describe('ArgInput — list of scalars', () => {
     });
     await userEvent.click(removeButtons[0]!);
     expect(onChange).toHaveBeenCalled();
-    const result = onChange.mock.calls[0][0] as ArgValue[];
+    const result = onChange.mock.calls[0]![0] as ArgValue[];
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(1);
     expect(result[0]).toBe('b');
@@ -153,7 +153,9 @@ describe('ArgInput — input object', () => {
     await userEvent.type(screen.getByRole('textbox', { name: 'name' }), 'x');
     expect(onChange).toHaveBeenCalled();
     // Each call should pass the whole input object as an ArgValue object
-    const firstVal = onChange.mock.calls[0][0] as { [field: string]: ArgValue };
+    const firstVal = onChange.mock.calls[0]![0] as {
+      [field: string]: ArgValue;
+    };
     expect(typeof firstVal).toBe('object');
     expect(!Array.isArray(firstVal)).toBe(true);
     expect(firstVal['name']).toBe('x');
@@ -200,7 +202,7 @@ describe('ArgInput — list of input objects', () => {
     render(<ArgInput arg={arg} value={[]} onChange={onChange} />);
     await userEvent.click(screen.getByRole('button', { name: /add item/i }));
     expect(onChange).toHaveBeenCalled();
-    const result = onChange.mock.calls[0][0] as ArgValue[];
+    const result = onChange.mock.calls[0]![0] as ArgValue[];
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(1);
   });
