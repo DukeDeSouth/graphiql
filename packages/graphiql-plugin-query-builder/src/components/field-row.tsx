@@ -1,4 +1,5 @@
 import { ChevronDownIcon } from '@graphiql/react';
+import { getNamedType, isEnumType, isScalarType } from 'graphql';
 import type { GraphQLField } from 'graphql';
 import type { FC } from 'react';
 import type { ArgValue } from '../lib/document-mutator';
@@ -45,6 +46,10 @@ export const FieldRow: FC<FieldRowProps> = ({
   const fullPath = [...path, field.name];
   const indent = path.length * 12;
   const hasArgs = field.args.length > 0;
+  // Color the type by its unwrapped named kind: scalars/enums are "leaf" types,
+  // everything else (object/interface/union) is "composite".
+  const namedType = getNamedType(field.type);
+  const isLeafType = isScalarType(namedType) || isEnumType(namedType);
 
   return (
     <div
@@ -83,7 +88,15 @@ export const FieldRow: FC<FieldRowProps> = ({
           <span className="graphiql-qb-expand-placeholder" aria-hidden="true" />
         )}
         <span className="graphiql-qb-field-name">{field.name}</span>
-        <span className="graphiql-qb-field-type">{String(field.type)}</span>
+        <span
+          className={
+            isLeafType
+              ? 'graphiql-qb-field-type'
+              : 'graphiql-qb-field-type graphiql-qb-field-type--composite'
+          }
+        >
+          {String(field.type)}
+        </span>
       </div>
       {selected && hasArgs && (
         <div className="graphiql-qb-field-args">

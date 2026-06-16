@@ -245,6 +245,12 @@
   white-space: nowrap;
 }
 
+/* Object / interface / union return types read as composite (blue); scalars
+   and enums keep the leaf color (orange). */
+.graphiql-qb-field-type--composite {
+  color: oklch(var(--accent-blue));
+}
+
 /* =========================================================================
    Args panel (shown when field selected and has args)
    ========================================================================= */
