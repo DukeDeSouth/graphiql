@@ -1,4 +1,5 @@
 /* Query Builder — v6 visual language */
+/* cspell:ignore Csvg Cpath Checkmark */
 
 /* =========================================================================
    Panel wrapper
@@ -111,9 +112,11 @@
   background: oklch(var(--fg-default) / 0.05);
 }
 
-/* Dim unselected rows */
+/* Unselected rows: selected names use --fg-strong (below), so unselected sit at
+   the default foreground. Going dimmer (e.g. --fg-disabled) fails WCAG AA
+   contrast for the small mono text. */
 .graphiql-qb-field-row[data-selected='false'] .graphiql-qb-field-name {
-  color: oklch(var(--fg-disabled));
+  color: oklch(var(--fg-default));
 }
 
 .graphiql-qb-field-row[data-selected='false'] .graphiql-qb-expand-btn {
