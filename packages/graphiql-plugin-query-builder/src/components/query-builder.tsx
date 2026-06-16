@@ -241,9 +241,12 @@ export const QueryBuilder: FC = () => {
     );
   }
 
+  const queryType = schema.getQueryType();
+  const mutationType = schema.getMutationType();
+
   const rootTypes = [
-    schema.getQueryType(),
-    schema.getMutationType(),
+    queryType,
+    mutationType,
     schema.getSubscriptionType(),
   ].filter(Boolean) as NonNullable<ReturnType<typeof schema.getQueryType>>[];
 
@@ -255,16 +258,18 @@ export const QueryBuilder: FC = () => {
       <div className="graphiql-qb-body">
         {rootTypes.map(rootType => {
           const opKind =
-            rootType.name === 'Query'
+            rootType === queryType
               ? 'query'
-              : rootType.name === 'Mutation'
+              : rootType === mutationType
                 ? 'mutation'
                 : 'subscription';
           return (
             <section key={rootType.name} className="graphiql-qb-root-section">
               <div className="graphiql-qb-op-header">
                 <MethodPill operation={opKind} />
-                <span className="graphiql-qb-op-name">{rootType.name}</span>
+                <span className="graphiql-qb-op-name graphiql-qb-root-name">
+                  {rootType.name}
+                </span>
                 <span className="graphiql-qb-op-count">
                   {selectedCount} selected
                 </span>
