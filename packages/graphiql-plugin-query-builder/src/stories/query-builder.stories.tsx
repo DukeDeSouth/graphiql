@@ -91,6 +91,7 @@ function withProvider(schema: GraphQLSchema | null, children: ReactNode) {
         fetcher={mockFetcher}
         schema={schema}
         dangerouslyAssumeSchemaIsValid
+        defaultTheme="dark"
       >
         <div
           style={{

@@ -288,8 +288,11 @@
    Arg input controls
    ========================================================================= */
 
-.graphiql-qb-arg-input,
-.graphiql-qb-arg-select {
+/* Element+class selectors (0-1-1) override `.graphiql-container input` (0-1-1)
+   by load-order; they also beat any class-only (0-1-0) that might appear in
+   shared stylesheets. */
+input.graphiql-qb-arg-input,
+select.graphiql-qb-arg-select {
   flex: 1;
   min-width: 0;
   background: oklch(var(--bg-overlay));
@@ -303,8 +306,8 @@
   transition: border-color 80ms;
 }
 
-.graphiql-qb-arg-input:focus,
-.graphiql-qb-arg-select:focus {
+input.graphiql-qb-arg-input:focus,
+select.graphiql-qb-arg-select:focus {
   border-color: oklch(var(--accent-purple));
 }
 
@@ -345,7 +348,9 @@
 
 .graphiql-qb-var-toggle[aria-pressed='true'] {
   background: oklch(var(--accent-purple));
-  color: oklch(98% 0 0);
+  /* Dark purple background in light theme, light purple in dark theme.
+     Near-black text keeps ≥ 4.5:1 contrast on both surfaces. */
+  color: oklch(10% 0 0);
   border-color: transparent;
 }
 
@@ -503,7 +508,8 @@
 }
 
 .graphiql-qb-fragment-empty {
-  color: oklch(var(--fg-disabled));
+  /* --fg-disabled is too dim for small text; --fg-default meets WCAG AA in both themes. */
+  color: oklch(var(--fg-default));
   font-size: var(--font-size-small);
   font-family: var(--font-family);
   margin: 0;

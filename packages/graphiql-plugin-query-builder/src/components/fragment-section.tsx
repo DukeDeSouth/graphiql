@@ -28,7 +28,7 @@ export const FragmentSection: FC<FragmentSectionProps> = ({
 
   return (
     <section className="graphiql-qb-fragment-section" aria-label="Fragments">
-      <h4 className="graphiql-qb-fragment-heading">Fragments</h4>
+      <h3 className="graphiql-qb-fragment-heading">Fragments</h3>
       {fragments.length === 0 ? (
         <p className="graphiql-qb-fragment-empty">No fragments defined.</p>
       ) : (
